@@ -6,9 +6,9 @@ using UnityEngine;
 
 public class tableGenerator : MonoBehaviour
 {
-    public GameObject cardHolderPrefab;
-    public 
-
+    public GameObject cardHolderPrefab; 
+    public GameObject card;
+    public handManager hm;
     Vector3 cardHolderDimensions;
     int cardsPerRow = 10;
     int horiDistanceBetweenCards = 1;
@@ -34,9 +34,11 @@ public class tableGenerator : MonoBehaviour
         boardParent.transform.name = "Board #" + boardCount;
         boardCamera.transform.name = "Camera #" + boardCount;
         Vector3 startPosition = Vector3.zero;
-
         boardController bc = boardParent.AddComponent<boardController>();
+        hm.bc = bc;
         bc.cardsPerRow = cardsPerRow;
+        bc.cardDimensions = card.transform.GetComponent<MeshRenderer>().bounds.extents;
+
         for(int j = 0; j < rowCount; ++j)
         {
             for(int i = 0; i < cardsPerRow; ++i)
@@ -48,8 +50,9 @@ public class tableGenerator : MonoBehaviour
                 }
                 cardHolder.transform.name = "(" + i + "," + j + ")";
                 cardHolder.transform.parent = boardParent.transform;
-                Debug.Log(cardHolder);
-                bc.addCard(cardHolder);
+                cardHolder cardHolderScript = cardHolder.AddComponent<cardHolder>();
+                cardHolderScript.setValues(0.6f,0.2f, card.transform.GetComponent<MeshRenderer>().bounds.extents);
+                bc.addCard(cardHolderScript);
             }
             if(j != rowCount - 1) // Don't update card position for last item in loop. Would set middle incorrectly
             {
@@ -89,9 +92,6 @@ public class tableGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.G))
-        {
-            generateBoard();
-        }
+        
     }
 }

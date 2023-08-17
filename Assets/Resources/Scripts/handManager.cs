@@ -7,9 +7,12 @@ using System;
 public class handManager : MonoBehaviour
 {
     public GameObject handHolder;
+    public GameObject cardHolder;
     public GameObject card;
-
+    public GameObject cardOnField;
+    public boardController bc;
     heldCardInfo heldCard;
+    
     Image img;
     Vector3 handCenter;
     List<GameObject> hand;
@@ -17,14 +20,19 @@ public class handManager : MonoBehaviour
     public List<Sprite> tempSprites;
     int lastHighlightedCard = -1;
     float mouseOffset; 
+    Vector3 cardDimensions;
+    Vector3 cardHolderDimensions;
+
 
     Rect handArea;
     Rect cardArea;
 
     struct heldCardInfo
     {
-        public int previousHandIndex;
         public GameObject card;
+        public GameObject onField;
+        public int previousHandIndex;
+        public cardHolder lastPosition;
     }
 
     bool inHandBox;
@@ -42,16 +50,31 @@ public class handManager : MonoBehaviour
         mouseOffset += handArea.width;
         inHandBox = mouseInHand();
         heldCard.card = null;
+        cardDimensions = cardOnField.transform.GetComponent<MeshRenderer>().bounds.extents;
+        cardHolderDimensions = cardHolder.transform.GetComponent<MeshRenderer>().bounds.extents;
     }
 
     void addCardToHand()
     {
-        GameObject newCard = GameObject.Instantiate(card);
-        newCard.transform.SetParent(handHolder.transform);
-        newCard.transform.GetComponent<Image>().color = new Vector4(255,255,255,1);
-        // newCard.transform.
-        newCard.transform.GetComponent<Image>().sprite = tempSprites[UnityEngine.Random.Range(0,tempSprites.Count)];
-        hand.Add(newCard);
+        GameObject cardParent = new GameObject();
+        
+        GameObject cardSprite = GameObject.Instantiate(card);
+        cardSprite.transform.GetComponent<Image>().color = new Vector4(255,255,255,1);
+        cardSprite.transform.GetComponent<Image>().sprite = tempSprites[UnityEngine.Random.Range(0,tempSprites.Count)];
+        cardSprite.transform.SetParent(cardParent.transform);
+        cardSprite.name = "hand";
+
+
+        GameObject cardModel = GameObject.Instantiate(cardOnField);
+        cardModel.transform.SetParent(cardParent.transform);
+        cardModel.name = "field";
+
+        
+        
+        cardParent.transform.SetParent(handHolder.transform);
+        cardParent.transform.position = handHolder.transform.position;
+        cardParent.name = "cardParent";
+        hand.Add(cardParent);
     }
     public void updateHand()
     {
@@ -65,11 +88,14 @@ public class handManager : MonoBehaviour
 
         for(int i =0 ; i < hand.Count; ++i)
         {
-            RectTransform rt = hand[i].GetComponent<RectTransform>();
+            GameObject cardParent = hand[i];
+            GameObject currentCard = cardParent.transform.GetChild(0).gameObject;
+            
+            RectTransform rt = currentCard.GetComponent<RectTransform>();
             rt.anchoredPosition = new Vector2(startPos,horiPosition);
-            hand[i].transform.localScale = new Vector3(scaleVal,scaleVal,scaleVal);
-            hand[i].name = $"{i}";
-            hand[i].transform.SetSiblingIndex(i);
+            currentCard.transform.localScale = new Vector3(scaleVal,scaleVal,scaleVal);
+            cardParent.name = $"Position {i}";
+            cardParent.transform.SetSiblingIndex(i);
 
             cardCoordinates.Add(startPos - cardArea.width/4);
             startPos += addAmount;
@@ -135,15 +161,41 @@ public class handManager : MonoBehaviour
                         insertPosition = cardCoordinates.Count;
                     }
                 }
+                hand.Insert(insertPosition, heldCard.card.transform.parent.gameObject);
+                updateHand();
             }
-            hand.Insert(insertPosition, heldCard.card);
-            updateHand();
+            else
+            {
+                heldCard.lastPosition.addCard(heldCard.onField);
+            }
+            
             heldCard.card = null;
+        }
+    }
+
+    void switchCardState()
+    {
+
+    }
+
+    void loadHandState(GameObject card, bool onField)
+    {
+        if (onField)
+        {
+            heldCard.onField = card;
+            heldCard.card = card.transform.parent.GetChild(0).gameObject;
+            heldCard.card.SetActive(false);
+        }
+        else
+        {
+            heldCard.onField = card.transform.parent.GetChild(1).gameObject;
+            heldCard.card = card;
+            heldCard.onField.SetActive(false);
         }
     }
     void scanForHoverCard()
     {
-        if(!mouseInHand())
+        if(!mouseInHand()) // Fixes card hover when leaving hand box
         {
             if(inHandBox)
             {
@@ -162,28 +214,71 @@ public class handManager : MonoBehaviour
             updateHand();
             hand[closestCardIndex].transform.SetAsLastSibling();
         }
-
-
         if(Input.GetMouseButtonDown(0) && !holdingCard())
         {
-            heldCard.card = hand[closestCardIndex];
+            loadHandState(hand[closestCardIndex].transform.GetChild(0).gameObject,false);
             heldCard.previousHandIndex = closestCardIndex;
-            int removeIndex = hand.IndexOf(heldCard.card);
+            int removeIndex = hand.IndexOf(heldCard.card.transform.parent.gameObject);
             hand.RemoveAt(removeIndex);
             cardCoordinates.RemoveAt(removeIndex);
-            // hand.Remove(heldCard.card);
         }
         inHandBox = true;
 
+    }
+
+
+    void scanForOnFieldCard()
+    {
+        if(Input.GetMouseButtonDown(0) && !holdingCard() && !mouseInHand())
+        {
+            GameObject closestCard = bc.mouseOverClosestCard();
+            Debug.Log(closestCard);
+            if (closestCard != null)
+            {
+                loadHandState(closestCard,true);
+            }
+        }
     }
 
     void updateHeldCard()
     {
         if(holdingCard())
         {
-            heldCard.card.transform.position = Input.mousePosition;
-            heldCard.card.transform.SetAsLastSibling();
+            if(mouseInHand())
+            {
+                heldCard.card.transform.position = Input.mousePosition;
+                heldCard.card.transform.parent.transform.SetAsLastSibling();
+                heldCard.onField.SetActive(false);
+                heldCard.card.SetActive(true);
+
+            }
+            else
+            {
+                heldCard.onField.SetActive(true);
+                heldCard.card.SetActive(false);
+
+                cardHolder closestCard = bc.getClosestCardHolder();
+                if (closestCard == null)
+                {
+                    Debug.Log("Error, can't find closest card.");
+                    return;
+                }
+                Vector3 position = closestCard.getNextPosition(heldCard.onField);
+                heldCard.onField.transform.position = position;
+                heldCard.lastPosition = closestCard;
+
+            }
         }
+    }
+
+    void checkForOnFieldCard()
+    {
+        if(!(holdingCard() && !mouseInHand()))
+        {
+            return;
+        }
+        
+
     }
 
     // Update is called once per frame
@@ -194,10 +289,10 @@ public class handManager : MonoBehaviour
             addCardToHand();
             updateHand();
         }
-        
+        checkForOnFieldCard();
         scanForHoverCard();
         updateHeldCard();
         releaseCard();
-        // Debug.Log(mouseInHand());
+        scanForOnFieldCard();
     }
 }

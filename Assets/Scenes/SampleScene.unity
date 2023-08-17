@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748171, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -136,7 +136,6 @@ GameObject:
   - component: {fileID: 179790077}
   - component: {fileID: 179790076}
   - component: {fileID: 179790075}
-  - component: {fileID: 179790080}
   m_Layer: 5
   m_Name: Hand
   m_TagString: Untagged
@@ -157,7 +156,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   handHolder: {fileID: 1554924115}
+  cardHolder: {fileID: 4203715052222839636, guid: eda2b04d6663bc44f99ac3bba5024236, type: 3}
   card: {fileID: 3801688920878791148, guid: 0c43b4e5923b3f04c91371e3f2ce0800, type: 3}
+  cardOnField: {fileID: 4203715052222839636, guid: 742a404a2c593ea4d9340cfab15939f0, type: 3}
+  bc: {fileID: 0}
   tempSprites:
   - {fileID: 21300000, guid: d43fb0b53ee4c444497b879d1eab44d7, type: 3}
   - {fileID: 21300000, guid: 25dbd7c05fb03654990b932386739d05, type: 3}
@@ -247,19 +249,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &179790080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 179790074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 039e43822a79a2a4494be2fe46f62ad1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hand: {fileID: 179790075}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,7 +464,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardHolderPrefab: {fileID: 4203715052222839636, guid: eda2b04d6663bc44f99ac3bba5024236, type: 3}
-  cardHolderDimensions: {x: 0, y: 0, z: 0}
+  card: {fileID: 4203715052222839636, guid: 742a404a2c593ea4d9340cfab15939f0, type: 3}
+  hm: {fileID: 179790075}
 --- !u!1 &2071304330
 GameObject:
   m_ObjectHideFlags: 0
