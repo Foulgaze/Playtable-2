@@ -9,7 +9,6 @@ public class boardController: MonoBehaviour
     public float distance = 5;
     public Vector3 cardDimensions;
     Dictionary<Vector3, cardHolder> cardHolderScripts = new Dictionary<Vector3, cardHolder>();
-    Dictionary<Vector3, cardHolder> vectorToCardOnField = new Dictionary<Vector3, cardHolder>();
 
     public void addCard(cardHolder c)
     {   
@@ -56,19 +55,21 @@ public class boardController: MonoBehaviour
     }
 
 
-    public GameObject mouseOverClosestCard()
+    public (GameObject,cardHolder) mouseOverClosestCard()
     {
-        cardHolder card = getClosestCardHolder();
-        if (card == null || card.cards.Count < 1)
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
         {
-            return null;
+            if (hit.collider.CompareTag("card"))
+            {
+                GameObject cardObject = hit.collider.gameObject;
+                return (cardObject, cardObject.GetComponent<cardBehavior>().parent);
+            }
         }
-        GameObject lastCardInPile = card.cards[card.cards.Count-1];
-        if (card.pointOnCard(lastCardInPile, raycastToField()))
-        {
-            return lastCardInPile;
-        }
-        return null;
+
+        return (null,null);
 
 
     }

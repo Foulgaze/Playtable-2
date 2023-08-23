@@ -51,7 +51,25 @@ public class tableGenerator : MonoBehaviour
                 cardHolder.transform.name = "(" + i + "," + j + ")";
                 cardHolder.transform.parent = boardParent.transform;
                 cardHolder cardHolderScript = cardHolder.AddComponent<cardHolder>();
-                cardHolderScript.setValues(0.6f,0.2f, card.transform.GetComponent<MeshRenderer>().bounds.extents);
+                float vertOffset = 0.6f;
+                float horiOffset = 0.2f;
+                int cardLimit = 3;
+                Vector3 orientation = new Vector3(-1,-1,-1);
+                if(i == 0)
+                {
+                    if(j == rowCount - 1) // Bottom Left For Deck
+                    {
+                        orientation = new Vector3(0,0,180);
+                    }
+                    else
+                    {
+                        orientation = new Vector3(0,0,0);
+                    }
+                    vertOffset = 0;
+                    horiOffset = 0;
+                    cardLimit = 1000;
+                }
+                cardHolderScript.setValues(vertOffset,horiOffset, card.transform.GetComponent<MeshRenderer>().bounds.extents, orientation,cardLimit);
                 bc.addCard(cardHolderScript);
             }
             if(j != rowCount - 1) // Don't update card position for last item in loop. Would set middle incorrectly
