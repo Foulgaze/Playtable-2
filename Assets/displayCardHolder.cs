@@ -3,25 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.UI;
-
+using TMPro;
+using UnityEngine.Events;
 public class displayCardHolder : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject cardPrefab;
     public GameObject cardHolder;
     public Scrollbar scrollbar; 
+    public TMP_InputField  searchbar;
     public List<Sprite> temporarySprites;
     List<GameObject> cards;
     Rect boxArea;
     RectTransform cardSize;
-    public int cardCount = 10;
+    public int cardCount = 100;
 
 
 
-    float horizontalCardPadding = 1;
-    float verticalCardPadding = 1;
-    float intracardXPadding = 1;
-    float intracardYPadding =1 ;
+    public float horizontalCardPadding = 4;
+    public float verticalCardPadding = 4;
+    public float intracardXPadding = 1;
+    public float intracardYPadding =1 ;
+
+    Vector2 cardDimensions;
+
+    int cardsPerRow = 4;
     void Start()
     {
 
@@ -33,61 +39,89 @@ public class displayCardHolder : MonoBehaviour
             go.transform.GetComponent<Image>().sprite = temporarySprites[i % temporarySprites.Count];
             cards.Add(go);
             go.transform.SetParent(cardHolder.transform);
-
         }   
+
+        searchbar.onValueChanged.AddListener(updateSearchBox);
         boxArea = RectTransformUtility.PixelAdjustRect(transform.GetComponent<RectTransform>(),GetComponent<Canvas>());
-        cardSize = cards[0].transform.GetComponent<RectTransform>();
-        setScrollValues();
-        updateSearchBox();
+        setCardDimensions();
+        setScrollValues(cards);
+        updateSearchBox("");
     }
 
 
-    void setScrollValues()
+    void setCardDimensions()
     {
-        // float startPos = boxArea.width/-2 + horizontalCardPadding + cardSize.sizeDelta.x/2;
-        // float horiPosition = boxArea.height/2 - verticalCardPadding - cardSize.sizeDelta.y/2;
-        // int cardsPerRow = (int) ((boxArea.width - horizontalCardPadding * 2)/(cardSize.sizeDelta.x + intracardXPadding));
-        // Debug.Log($"Cards Per Row : {cardsPerRow}");
-        // int totalSteps = (int) (((boxArea.height - verticalCardPadding * 2) - (horiPosition)) / ((cardSize.sizeDelta.y + intracardYPadding) * (cards.Count / cardsPerRow)));
-        // Debug.Log($"Total Steps : {totalSteps}");
+        float horizontalCardSize = (boxArea.width - (horizontalCardPadding * 2) - (intracardXPadding * (cardsPerRow - 1)))/(cardsPerRow);
+        float verticalCardSize = horizontalCardSize * (3.5f/2.5f);
 
-        float boxHeight = boxArea.height - verticalCardPadding * 2;
-        float cardHeight = cardSize.sizeDelta.y + intracardYPadding;
+        cardDimensions = new Vector2(horizontalCardSize,verticalCardSize );
+    }
 
-        int cardsPerRow = (int)((boxArea.width - horizontalCardPadding * 2) / (cardSize.sizeDelta.x + intracardXPadding));
-        int cardsPerColumn = Mathf.FloorToInt(boxHeight / cardHeight);
 
-        Debug.Log($"Cards Per Row: {cardsPerRow}");
-        Debug.Log($"Cards Per Column: {cardsPerColumn}");
+    void setScrollValues(List<GameObject> subset)
+    {
+        int verticalCardFit = (int) ((boxArea.height - verticalCardPadding * 2)/(cardDimensions.y));
+        int yValues = (int) Mathf.Ceil(subset.Count / (float) cardsPerRow);
+        Debug.Log($"Vertical Card Fit : {verticalCardFit}, yValues : {yValues}");
+        int totalSteps = yValues - verticalCardFit;
+        scrollbar.numberOfSteps = totalSteps + 1;
+        scrollbar.size = 1f/(totalSteps + 1);
 
-        int totalCards = cardsPerRow * cardsPerColumn;
-        Debug.Log($"Total Cards: {totalCards}");
+    }
 
+    int getCurrentStep()
+    {
+        // Calculate the step size based on the number of steps
+        float stepSize = 1.0f / (scrollbar.numberOfSteps - 1);
+
+        // Calculate the current step based on the scrollbar's value
+        int currentStep = Mathf.RoundToInt(scrollbar.value / stepSize);
+
+        return (int) Mathf.Max(Mathf.Clamp(currentStep, 0, scrollbar.numberOfSteps - 1),0f);
     }
     
 
-    public void updateSearchBox()
+    public void updateSearchBox(string data)
     {
-        float scaleVal = 1;
-        float startPos = boxArea.width/-2 + horizontalCardPadding + cardSize.sizeDelta.x/2;
-        float addAmount = cardSize.sizeDelta.x;
-        float horiPosition = boxArea.height/2 - verticalCardPadding - cardSize.sizeDelta.y/2;
-        float iterPos = startPos;
-        for(int i =0 ; i < cards.Count; ++i)
+
+        List<GameObject> sub = new List<GameObject>(cards);
+    
+        int cardIter = 0;
+        while (cardIter < sub.Count)
         {
-            GameObject currentCard = cards[i].gameObject;            
-            RectTransform rt = currentCard.GetComponent<RectTransform>();
-            rt.anchoredPosition = new Vector2(iterPos,horiPosition);
-            Debug.Log($"{startPos}, {boxArea.width/2}, {cardSize.sizeDelta.x}");
-            
-            currentCard.transform.localScale = new Vector3(scaleVal,scaleVal,scaleVal);
-            if (iterPos + addAmount  + horizontalCardPadding> boxArea.width/2)
+            GameObject currCard = sub[cardIter];
+            if (!currCard.name.Contains(searchbar.text))
             {
-                horiPosition -= cardSize.sizeDelta.y + intracardYPadding;
-                iterPos = startPos;
+                currCard.SetActive(false);
+                sub.RemoveAt(cardIter);
                 continue;
             }
-            iterPos += addAmount + intracardXPadding;
+            currCard.SetActive(true);
+            cardIter++;
+        }
+        setScrollValues(sub);
+        
+        
+        float xStart = boxArea.width/-2 + horizontalCardPadding + cardDimensions.x/2;
+     
+        float xIterPos = xStart;
+        float yIterPos = boxArea.height/2 - verticalCardPadding - cardDimensions.y/2;
+        yIterPos += (cardDimensions.y + intracardYPadding) * getCurrentStep();
+        Debug.Log($"Start Pos : {xStart}, Y Start : {yIterPos} Step : {getCurrentStep()}");
+        for(int i =0 ; i < sub.Count; ++i)
+        {
+            if (i != 0 && i % cardsPerRow == 0)
+            {
+                yIterPos -=  cardDimensions.y + intracardYPadding;
+                xIterPos = xStart;
+            }
+
+            GameObject currentCard = sub[i].gameObject;            
+            RectTransform rt = currentCard.GetComponent<RectTransform>();
+            rt.sizeDelta = cardDimensions;
+            rt.anchoredPosition = new Vector2(xIterPos,yIterPos);
+            
+            xIterPos += cardDimensions.x + intracardXPadding;
 
         }
     }
