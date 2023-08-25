@@ -186,11 +186,6 @@ public class handManager : MonoBehaviour
         }
     }
 
-    void switchCardState()
-    {
-
-    }
-
     void loadHandState(GameObject card, bool onField)
     {
         if (onField)
@@ -240,8 +235,6 @@ public class handManager : MonoBehaviour
         inHandBox = true;
 
     }
-
-
     void scanForOnFieldCard()
     {
         if(Input.GetMouseButtonDown(0) && !holdingCard() && !mouseInHand())
@@ -286,15 +279,6 @@ public class handManager : MonoBehaviour
         }
     }
 
-    void checkForOnFieldCard()
-    {
-        if(!(holdingCard() && !mouseInHand()))
-        {
-            return;
-        }
-        
-
-    }
 
     // Update is called once per frame
     void Update()
@@ -304,7 +288,6 @@ public class handManager : MonoBehaviour
             addCardToHand();
             updateHand();
         }
-        checkForOnFieldCard();
         scanForHoverCard();
         updateHeldCard();
         releaseCard();

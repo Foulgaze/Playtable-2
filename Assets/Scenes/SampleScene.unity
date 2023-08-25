@@ -485,7 +485,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 717f9b95599acde4c9110586cec24e8a, type: 3}
   - {fileID: 21300000, guid: 2891d889a95b1c54cb6e39293bc0ef8c, type: 3}
   - {fileID: 21300000, guid: a5d8dc17b83b9204fa77d57008506d34, type: 3}
-  cardCount: 10
+  cardCount: 100
   horizontalCardPadding: 4
   verticalCardPadding: 4
   intracardXPadding: 1

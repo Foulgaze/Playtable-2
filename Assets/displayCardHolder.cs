@@ -56,19 +56,15 @@ public class displayCardHolder : MonoBehaviour
 
         cardDimensions = new Vector2(horizontalCardSize,verticalCardSize );
     }
-
-
     void setScrollValues(List<GameObject> subset)
     {
         int verticalCardFit = (int) ((boxArea.height - verticalCardPadding * 2)/(cardDimensions.y));
         int yValues = (int) Mathf.Ceil(subset.Count / (float) cardsPerRow);
-        Debug.Log($"Vertical Card Fit : {verticalCardFit}, yValues : {yValues}");
         int totalSteps = yValues - verticalCardFit;
         scrollbar.numberOfSteps = totalSteps + 1;
         scrollbar.size = 1f/(totalSteps + 1);
 
     }
-
     int getCurrentStep()
     {
         // Calculate the step size based on the number of steps
